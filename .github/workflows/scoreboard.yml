@@ -1,0 +1,66 @@
+name: scoreboard
+
+# Beacons are untrusted input: they are produced by student-triggered jobs, so
+# every field in client_payload is attacker-controlled. This workflow only
+# appends a sanitized row to HITS.md. It never evaluates, interpolates into a
+# shell command, or otherwise interprets payload content.
+on:
+  repository_dispatch:
+    types: [beacon]
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Append beacon row
+        env:
+          PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+        run: |
+          set -euo pipefail
+
+          # Strip anything that could break the markdown table: newlines and
+          # carriage returns go away, pipes are escaped. Payload values are
+          # never passed through eval or interpolated into a command.
+          sanitize() {
+            printf '%s' "${1:-}" \
+              | tr -d '\r\n' \
+              | sed 's/|/\\|/g'
+          }
+
+          team=$(sanitize "$(jq -r '.team // "unknown"' <<<"$PAYLOAD")")
+          kind=$(sanitize "$(jq -r '.kind // "unknown"' <<<"$PAYLOAD")")
+          secret=$(sanitize "$(jq -r '.secret // ""' <<<"$PAYLOAD")")
+          workflow=$(sanitize "$(jq -r '.workflow // ""' <<<"$PAYLOAD")")
+          extra=$(sanitize "$(jq -r '.detail // ""' <<<"$PAYLOAD")")
+          ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          detail="secret=${secret} workflow=${workflow}"
+          if [ -n "$extra" ]; then
+            detail="${detail} ${extra}"
+          fi
+
+          printf '| %s | %s | %s | %s |\n' "$ts" "$team" "$kind" "$detail" >> HITS.md
+
+          git config user.name "scoreboard-bot"
+          git config user.email "scoreboard-bot@users.noreply.github.com"
+          git add HITS.md
+          git commit -m "beacon: ${kind} from ${team}"
+
+          # Concurrent dispatches can race on the same branch. Rebase and retry.
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep $((attempt * 2))
+            git pull --rebase origin main
+          done
+          echo "push failed after retries" >&2
+          exit 1
