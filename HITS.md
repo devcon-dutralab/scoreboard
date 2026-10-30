@@ -6,3 +6,4 @@
 | 2026-10-30T15:50:08Z | bor-lab | ci | secret=FAKE-KEY-7f3a9c-do-not-use workflow=ci |
 | 2026-10-30T15:51:02Z | bor-lab | pr-head-ci | secret=FAKE-KEY-7f3a9c-do-not-use workflow=integration-deploy |
 | 2026-10-30T15:51:17Z | bor-lab | ci | secret=FAKE-KEY-7f3a9c-do-not-use workflow=ci |
+| 2026-10-30T15:52:11Z | bor-lab | ci | secret=FAKE-KEY-7f3a9c-do-not-use workflow=ci |
