@@ -7,3 +7,4 @@
 | 2026-10-30T01:13:59Z | cli-lab | release-manifest | secret=FAKE-KEY-7f3a9c-do-not-use workflow=release |
 | 2026-10-30T01:15:44Z | cli-lab | ci | secret=FAKE-KEY-7f3a9c-do-not-use workflow=ci |
 | 2026-10-30T01:15:55Z | cli-lab | ci | secret=FAKE-KEY-7f3a9c-do-not-use workflow=ci |
+| 2026-10-30T01:16:17Z | cli-lab | release-manifest | secret=FAKE-KEY-7f3a9c-do-not-use workflow=release |
